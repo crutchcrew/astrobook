@@ -320,10 +320,18 @@ export interface StoryContext {
    */
   id: string
   /**
-   * The story's export name, e.g. 'Default'
+   * The story's display label, falling back to its export name, e.g. 'Default'
    */
   name: string
-  module: { id: string; name: string; directory: string }
+  module: {
+    id: string
+    name: string
+    directory: string
+    /**
+     * The module display label, falling back to its file name.
+     */
+    title: string
+  }
   /**
    * The default export's parameters shallow-merged with the story's parameters (story wins).
    */
@@ -432,6 +440,11 @@ export interface StorySlotComponent {
  */
 export interface StoryNamedExport {
   /**
+   * Display label for this story. URLs still use the export name.
+   */
+  name?: string
+
+  /**
    * Free-form data for decorators and tooling. Shallow-merged over the default
    * export's parameters, with the story's values taking precedence.
    */
@@ -462,3 +475,33 @@ declare global {
     }
   }
 }
+
+/**
+ * Default export of a story file.
+ */
+export interface StoryDefaultExport {
+  component: unknown
+  /**
+   * Display label for this module. URLs still use the file path.
+   */
+  title?: string
+  /**
+   * Free-form module data, shallow-merged with story parameters when rendered.
+   */
+  parameters?: Record<string, unknown> | null | undefined
+}
+
+/**
+ * Runtime metadata with raw, unmerged parameters.
+ */
+export type StoryMeta = Record<
+  string,
+  {
+    title?: string
+    parameters: Record<string, unknown>
+    stories: Record<
+      string,
+      { name?: string; parameters: Record<string, unknown> }
+    >
+  }
+>

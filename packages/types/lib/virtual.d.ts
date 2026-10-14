@@ -24,3 +24,8 @@ declare module 'virtual:astrobook/decorators.mjs' {
   const decorators: import('./types').StoryDecorator['component'][]
   export default decorators
 }
+
+declare module 'virtual:astrobook/story-meta.mjs' {
+  const meta: import('./types').StoryMeta
+  export default meta
+}

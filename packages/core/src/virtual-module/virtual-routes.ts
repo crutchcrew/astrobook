@@ -92,17 +92,18 @@ import type { StoryContext } from '@astrobook/types';
 import globalDecorators from 'virtual:astrobook/decorators.mjs';
 import StoryPage from 'astrobook/pages/story.astro';
 import WithDecorators from 'astrobook/components/with-decorators.astro';
-import { parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
+import { getStoryLabels, parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
 
 import * as ${modName} from '${route.storyModule.importPath}';
 
-const { isAstroComponent, parameters: defaultParameters } = parseStoryDefaultExport(${modName}, '${route.storyModule.importPath}');
-const { decorators, args, slots, parameters } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
+const { isAstroComponent, title, parameters: defaultParameters } = parseStoryDefaultExport(${modName}, '${route.storyModule.importPath}');
+const { name, decorators, args, slots, parameters } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
 
+const labels = getStoryLabels({ name: ${JSON.stringify(route.storyModule.name)}, title }, { name }, ${JSON.stringify(route.story.name)});
 const story: StoryContext = {
   id: ${JSON.stringify(route.story.id)},
-  name: ${JSON.stringify(route.story.name)},
-  module: ${JSON.stringify({ id: route.storyModule.id, name: route.storyModule.name, directory: route.storyModule.directory })},
+  name: labels.name,
+  module: { ...${JSON.stringify({ id: route.storyModule.id, name: route.storyModule.name, directory: route.storyModule.directory })}, title: labels.title },
   parameters: { ...defaultParameters, ...parameters },
 };
 const allDecorators = [
@@ -120,7 +121,7 @@ const props = isAstroComponent ? args : {
 };
 ---
 
-<StoryPage story={'${route.props.story}'} hasSidebar={${route.props.hasSidebar}}>
+<StoryPage label={story.name} story={'${route.props.story}'} hasSidebar={${route.props.hasSidebar}}>
   <WithDecorators decorators={allDecorators}>
     <StoryComponent component={${modName}.default.component} props={props} slots={slots} />
     {/* Never rendered: Astro bundles an island's client code only for a \`client:*\` directive it compiles. */}
