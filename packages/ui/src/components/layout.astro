@@ -6,6 +6,7 @@ import '../style.css'
 import './layout.css'
 import Sidebar from './sidebar.astro'
 import SidebarResizeHandle from './sidebar-resize-handle.astro'
+import ViewportToolbar from './viewport-toolbar.astro'
 import { ThemeScript } from 'astro-theme-toggle/components'
 import CustomHead from 'virtual:astrobook/components/head.mjs'
 import config from 'virtual:astrobook/global-config.mjs'
@@ -22,6 +23,11 @@ interface Props {
 }
 
 const hasSidebar = Astro.props.hasSidebar ?? true
+const hasViewports =
+  hasSidebar &&
+  Astro.props.story &&
+  config.viewports &&
+  config.viewports.length > 0
 const DEFAULT_SIDEBAR_WIDTH = 300
 const DEFAULT_SIDEBAR_RESIZING = false
 ---
@@ -108,11 +114,30 @@ const DEFAULT_SIDEBAR_RESIZING = false
       */
     }
     <main
-      class=":uno: box-border flex-1 overflow-auto"
+      class=":uno: box-border min-w-0 flex-1 overflow-auto"
       transition:name="astrobook-main"
       transition:animate="none"
     >
-      <slot />
+      {
+        hasViewports ? (
+          <>
+            <ViewportToolbar
+              story={Astro.props.story!}
+              label={Astro.props.label}
+            />
+            <div data-astrobook-inline-story style="display: contents">
+              <slot />
+            </div>
+            <div
+              data-astrobook-viewport-stage
+              class=":uno: box-border min-h-0 flex-1 flex-col items-center border-gray-200 dark:border-gray-700"
+              style="display: none"
+            />
+          </>
+        ) : (
+          <slot />
+        )
+      }
     </main>
   </body>
 </html>

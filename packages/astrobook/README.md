@@ -437,6 +437,29 @@ const { story } = Astro.props
 </div>
 ```
 
+### `viewports`
+
+Set the viewport presets shown above dashboard stories. The default presets are
+Mobile (375px), Tablet (768px), and Desktop (1440px). Select a preset to render the
+story in an iframe at that width, so CSS media queries use the selected viewport.
+Full restores the inline story. The selected name is saved in local storage and
+restored when navigating between stories or reloading.
+
+```js
+astrobook({
+  viewports: [
+    { name: 'Phone', width: 390, height: 844 },
+    { name: 'Laptop', width: 1280 },
+  ],
+})
+```
+
+Widths and optional heights are positive integers in CSS pixels. Without a height,
+the preview fills the remaining dashboard height. Names must be non-empty and
+unique. A saved name missing from the configured presets falls back to Full.
+Set `viewports: false` or `viewports: []` to hide the toolbar. The toolbar appears
+only on dashboard story pages; preview pages render stories directly.
+
 ### `head`
 
 You can further customize your Astrobook project by providing a custom `head` options. It's a path to an Astro component that includes custom tags to the `<head>` of your Astrobook site. It should only include [elements permitted inside `<head>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head#see_also), like `<link>`, `<style>`, `<script>`, etc.

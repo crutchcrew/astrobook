@@ -125,6 +125,7 @@ export function createAstrobookIntegration(
                   dashboardBase,
                   storyBase,
                   decorators: resolvedOptions.decorators,
+                  viewports: resolvedOptions.viewports,
                   head: resolvedOptions.head,
                   home: resolvedOptions.home,
                   homeContent: resolvedOptions.homeContent,

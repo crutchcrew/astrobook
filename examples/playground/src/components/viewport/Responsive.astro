@@ -1,0 +1,17 @@
+<p class="viewport-narrow">narrow</p>
+<p class="viewport-wide">wide</p>
+
+<style>
+  .viewport-narrow {
+    display: none;
+  }
+
+  @media (max-width: 599px) {
+    .viewport-narrow {
+      display: block;
+    }
+    .viewport-wide {
+      display: none;
+    }
+  }
+</style>

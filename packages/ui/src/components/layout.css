@@ -10,3 +10,9 @@ html {
   /* Prevent adjustments of font size after orientation changes in iOS. */
   -webkit-text-size-adjust: 100%;
 }
+
+main[data-astrobook-viewport-active] {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+}

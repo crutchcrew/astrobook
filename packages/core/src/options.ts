@@ -54,6 +54,34 @@ const HomeSchema = v.pipe(
   v.minLength(1),
 )
 
+const ViewportsSchema = v.optional(
+  v.union([
+    v.literal(false),
+    v.pipe(
+      v.array(
+        v.object({
+          name: v.pipe(
+            v.string(),
+            v.check((name) => name.trim().length > 0, 'Name must not be empty'),
+          ),
+          width: v.pipe(v.number(), v.integer(), v.minValue(1)),
+          height: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
+        }),
+      ),
+      v.check(
+        (viewports) =>
+          new Set(viewports.map(({ name }) => name)).size === viewports.length,
+        'Viewport names must be unique',
+      ),
+    ),
+  ]),
+  () => [
+    { name: 'Mobile', width: 375 },
+    { name: 'Tablet', width: 768 },
+    { name: 'Desktop', width: 1440 },
+  ],
+)
+
 const IntegrationOptionsSchema = v.optional(
   v.object({
     directory: v.optional(v.string(), '.'),
@@ -63,6 +91,7 @@ const IntegrationOptionsSchema = v.optional(
     title: v.optional(v.string(), 'Astrobook'),
     css: v.optional(v.array(v.string()), []),
     decorators: v.optional(v.array(v.string()), []),
+    viewports: ViewportsSchema,
     head: v.optional(v.string(), 'astrobook/components/head.astro'),
     home: HomeSchema,
     homeContent: HomeContentSchema,
