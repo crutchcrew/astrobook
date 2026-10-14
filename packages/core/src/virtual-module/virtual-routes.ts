@@ -92,12 +92,13 @@ import type { StoryContext } from '@astrobook/types';
 import globalDecorators from 'virtual:astrobook/decorators.mjs';
 import StoryPage from 'astrobook/pages/story.astro';
 import WithDecorators from 'astrobook/components/with-decorators.astro';
+import StoryVariants from 'astrobook/components/story-variants.astro';
 import { getStoryLabels, mergeStoryParameters, parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
 
 import * as ${modName} from '${route.storyModule.importPath}';
 
 const { isAstroComponent, title, parameters: defaultParameters } = parseStoryDefaultExport(${modName}, '${route.storyModule.importPath}');
-const { name, decorators, args, slots, parameters } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
+const { name, decorators, args, slots, parameters, variants } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
 
 const labels = getStoryLabels({ name: ${JSON.stringify(route.storyModule.name)}, title }, { name }, ${JSON.stringify(route.story.name)});
 const story: StoryContext = {
@@ -106,24 +107,27 @@ const story: StoryContext = {
   module: { ...${JSON.stringify({ id: route.storyModule.id, name: route.storyModule.name, directory: route.storyModule.directory })}, title: labels.title },
   parameters: mergeStoryParameters(defaultParameters, parameters),
 };
-const allDecorators = [
-  ...globalDecorators.map((component) => ({ component, props: { story } })),
-  ...(decorators ?? []),
-];
+const hasVariants = Object.keys(variants ?? {}).length > 0;
+const outerDecorators = globalDecorators.map((component) => ({ component, props: { story } }));
+const allDecorators = [...outerDecorators, ...(decorators ?? [])];
 
 // The same hydration props that Astro's compiler adds for \`client:load\`.
-const props = isAstroComponent ? args : {
-  ...args,
+const hydrationProps = isAstroComponent ? {} : {
   'client:load': true,
   'client:component-hydration': 'load',
   'client:component-path': '${route.storyModule.importPath}',
   'client:component-export': 'default.component',
 };
+const getProps = (values: Record<string, unknown> = {}) => ({ ...args, ...values, ...hydrationProps });
 ---
 
 <StoryPage label={story.name} story={'${route.props.story}'} hasSidebar={${route.props.hasSidebar}}>
-  <WithDecorators decorators={allDecorators}>
-    <StoryComponent component={${modName}.default.component} props={props} slots={slots} />
+  <WithDecorators decorators={hasVariants ? outerDecorators : allDecorators}>
+    {hasVariants ? (
+      <StoryVariants component={${modName}.default.component} variants={variants} getProps={getProps} slots={slots} decorators={decorators} />
+    ) : (
+      <StoryComponent component={${modName}.default.component} props={getProps()} slots={slots} />
+    )}
     {/* Never rendered: Astro bundles an island's client code only for a \`client:*\` directive it compiles. */}
     {false && <${modName}.default.component client:load />}
   </WithDecorators>

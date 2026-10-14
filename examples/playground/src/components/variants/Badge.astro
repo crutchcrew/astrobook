@@ -1,0 +1,55 @@
+---
+interface Props {
+  size?: 'sm' | 'md' | 'lg'
+  color?: 'neutral' | 'accent'
+  outlined?: boolean
+  label?: string
+}
+
+const {
+  size = 'md',
+  color = 'neutral',
+  outlined = false,
+  label = 'Badge',
+} = Astro.props
+---
+
+<span
+  class="variant-badge"
+  data-size={size}
+  data-color={color}
+  data-outlined={String(outlined)}
+>
+  {label}<slot />
+</span>
+
+<style>
+  .variant-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    padding: 0.25em 0.75em;
+    border-radius: 1em;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  [data-size='sm'] {
+    font-size: 0.75rem;
+  }
+
+  [data-size='md'] {
+    font-size: 1rem;
+  }
+
+  [data-size='lg'] {
+    font-size: 1.25rem;
+  }
+
+  [data-color='accent'] {
+    background: color-mix(in srgb, currentColor 25%, transparent);
+  }
+
+  [data-outlined='true'] {
+    outline: 1px solid currentColor;
+  }
+</style>

@@ -106,6 +106,36 @@
 
 6. Run `npm run dev` and open `http://localhost:4321` to see your stories.
 
+### Variants
+
+Render a component with every value of a prop in one story:
+
+```ts
+// Badge.stories.ts
+import Badge from './Badge.astro'
+
+export default { component: Badge }
+
+export const AllSizes = {
+  args: { label: 'New' },
+  variants: { size: ['sm', 'md', 'lg'] },
+}
+
+export const ColorsAndSizes = {
+  args: { label: 'New' },
+  variants: {
+    size: { Small: 'sm', Medium: 'md', Large: 'lg' },
+    color: ['neutral', 'accent'],
+  },
+}
+```
+
+Each axis is a non-empty array or a non-empty record mapping display labels to prop values. Arrays use `String(value)` as labels, or `JSON.stringify` for objects and arrays. Axis key order determines the cartesian product: one axis renders a wrapping row of labeled figures; two or more axes render a table with the last axis as columns. Other axes form the rows, with labels joined by `/`.
+
+Cell values override `args`, and each cell receives the story's `slots`. Framework cells hydrate as separate islands. Global decorators wrap the whole grid once; the story's own decorators wrap each cell. Stories without variants, or with an empty variants object, render as usual.
+
+Style the grid through `.astrobook-variants`, `.astrobook-variants-cell`, and `.astrobook-variants-label`. The scoped defaults use `:where()` so your project styles can override them. Variant stories also include `variants: { size: ['Small', 'Medium', 'Large'], color: ['neutral', 'accent'] }` in `meta.json`, using the displayed axis labels for visual test names.
+
 ### Decorators
 
 Decorators are objects that have a property for the component and the props that will be passed to it on render. This component must have a _slot_ for children to be rendered. Currently, decorators only support styling changes and are not able to change a component's context or any client-side behaviors. Any decorators are rendered into HTML by Astro and sent to the client.

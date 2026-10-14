@@ -57,6 +57,9 @@ export const GET: APIRoute = () => {
               directory: module.directory,
             },
             parameters,
+            ...(storyMeta?.variants === undefined
+              ? {}
+              : { variants: storyMeta.variants }),
             url: buildPath(config.storyBase, story.id),
             dashboardUrl: buildPath(config.dashboardBase, story.id),
           },

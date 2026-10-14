@@ -5,7 +5,7 @@ import type { StoryModule } from '@astrobook/types'
  */
 export function serializeStoryMeta(modules: StoryModule[]): string {
   return [
-    `import { parseStoryDefaultExport, parseStoryNamedExport } from 'astrobook/client';`,
+    `import { getVariantAxes, parseStoryDefaultExport, parseStoryNamedExport } from 'astrobook/client';`,
     'const meta = {};',
     ...modules.map(
       (module) => `
@@ -18,8 +18,14 @@ export function serializeStoryMeta(modules: StoryModule[]): string {
           .map(
             (story) => `
           {
-            const { name, parameters } = parseStoryNamedExport(module, ${JSON.stringify(module.importPath)}, ${JSON.stringify(story.name)});
-            stories[${JSON.stringify(story.id)}] = { name, parameters: parameters ?? {} };
+            const { name, parameters, variants } = parseStoryNamedExport(module, ${JSON.stringify(module.importPath)}, ${JSON.stringify(story.name)});
+            stories[${JSON.stringify(story.id)}] = {
+              name,
+              parameters: parameters ?? {},
+              ...(variants === undefined ? {} : {
+                variants: Object.fromEntries(getVariantAxes(variants).map(({ name, entries }) => [name, entries.map(({ label }) => label)])),
+              }),
+            };
           }
         `,
           )

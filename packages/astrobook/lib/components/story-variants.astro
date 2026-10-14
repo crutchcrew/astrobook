@@ -1,0 +1,128 @@
+---
+import type { StoryNamedExport } from '@astrobook/types'
+import {
+  getVariantAxes,
+  getVariantCells,
+  StoryComponent,
+} from 'astrobook/client'
+
+import WithDecorators from './with-decorators.astro'
+
+interface Props {
+  component: unknown
+  variants: StoryNamedExport['variants']
+  getProps: (values: Record<string, unknown>) => Record<string, unknown>
+  slots?: StoryNamedExport['slots']
+  decorators?: StoryNamedExport['decorators']
+}
+
+const { component, variants, getProps, slots, decorators } = Astro.props
+const axes = getVariantAxes(variants)
+const columnAxis = axes.at(-1)!
+const rowAxes = axes.slice(0, -1)
+---
+
+{
+  axes.length === 1 ? (
+    <div class="astrobook-variants">
+      {getVariantCells(axes).map((cell) => (
+        <figure class="astrobook-variants-cell">
+          <WithDecorators decorators={decorators}>
+            <StoryComponent
+              component={component}
+              props={getProps(cell.values)}
+              slots={slots}
+            />
+          </WithDecorators>
+          <figcaption class="astrobook-variants-label">
+            {cell.labels[0]}
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  ) : (
+    <table class="astrobook-variants">
+      <thead>
+        <tr>
+          <th class="astrobook-variants-label">
+            {rowAxes.map(({ name }) => name).join(' / ')} × {columnAxis.name}
+          </th>
+          {columnAxis.entries.map(({ label }) => (
+            <th scope="col" class="astrobook-variants-label">
+              {label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {getVariantCells(rowAxes).map((row) => (
+          <tr>
+            <th scope="row" class="astrobook-variants-label">
+              {row.labels.join(' / ')}
+            </th>
+            {columnAxis.entries.map(({ value }) => (
+              <td class="astrobook-variants-cell">
+                <WithDecorators decorators={decorators}>
+                  <StoryComponent
+                    component={component}
+                    props={getProps({
+                      ...row.values,
+                      [columnAxis.name]: value,
+                    })}
+                    slots={slots}
+                  />
+                </WithDecorators>
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+<style>
+  /* Nesting keeps Astro's scope selector inside :where(), at zero specificity. */
+  div.astrobook-variants {
+    :where(&) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1.5rem;
+    }
+  }
+
+  table.astrobook-variants {
+    :where(&) {
+      border-collapse: separate;
+      border-spacing: 1.5rem 1rem;
+    }
+  }
+
+  .astrobook-variants-cell {
+    :where(&) {
+      text-align: center;
+      vertical-align: middle;
+    }
+  }
+
+  figure.astrobook-variants-cell {
+    :where(&) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+    }
+  }
+
+  .astrobook-variants-label {
+    :where(&) {
+      color: currentColor;
+      font-size: 0.75rem;
+      font-weight: normal;
+      text-align: center;
+      opacity: 0.65;
+    }
+  }
+</style>

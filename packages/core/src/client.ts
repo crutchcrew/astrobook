@@ -3,6 +3,7 @@ import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 
 export { createPathBuilder, type PathBuilder } from './utils/path-builder'
 export { StoryComponent } from './story-component'
+export { getVariantAxes, getVariantCells } from './variants'
 
 // Copy from https://github.com/withastro/astro/blob/astro@5.0.0/packages/astro/src/runtime/server/render/astro/factory.ts#L15
 function isAstroComponentFactory(obj: unknown): obj is AstroComponentFactory {
@@ -119,6 +120,23 @@ export function parseStoryNamedExport(
     )
   }
 
+  const variants = 'variants' in storyObject ? storyObject.variants : undefined
+  if (variants !== undefined && !isPlainObject(variants)) {
+    throw new TypeError(
+      `[astrobook] The 'variants' property of the named export '${storyName}' from '${importPath}' should be an object or undefined, but got ${Array.isArray(variants) ? 'an array' : describe(variants)}`,
+    )
+  }
+  for (const [axis, values] of Object.entries(variants ?? {})) {
+    if (
+      !(Array.isArray(values) && values.length > 0) &&
+      !(isPlainObject(values) && Object.keys(values).length > 0)
+    ) {
+      throw new TypeError(
+        `[astrobook] The '${axis}' variant axis of the named export '${storyName}' from '${importPath}' should be a non-empty array or non-empty plain object, but got ${values === null ? 'null' : Array.isArray(values) ? 'an array' : typeof values}`,
+      )
+    }
+  }
+
   const slots = 'slots' in storyObject ? storyObject.slots : undefined
   if (slots != null && typeof slots !== 'object') {
     throw new TypeError(
@@ -144,9 +162,16 @@ export function parseStoryNamedExport(
     name,
     decorators,
     args,
+    variants: variants as StoryNamedExport['variants'],
     parameters: parameters as StoryNamedExport['parameters'],
     slots: slots as StoryNamedExport['slots'],
   }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false
+  const prototype: unknown = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
 }
 
 function describe(value: unknown): string {
