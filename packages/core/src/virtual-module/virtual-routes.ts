@@ -7,8 +7,6 @@ import slash from 'slash'
 import { invariant } from '../utils/invariant'
 import type { PathBuilder } from '../utils/path-builder'
 
-import { getStoryModules } from './get-story-modules'
-
 export interface VirtualRoute {
   pattern: string
   /**
@@ -28,16 +26,15 @@ export interface VirtualRoute {
   }
 }
 
-export async function getVirtualRoutes(
-  rootDir: string,
+export function getVirtualRoutes(
+  storyModules: StoryModule[],
   codegenDir: string,
   logger: AstroIntegrationLogger,
   dashboardSubpath: string,
   previewSubpath: string,
   buildPath: PathBuilder,
-): Promise<Map<string, VirtualRoute>> {
+): Map<string, VirtualRoute> {
   const routes: VirtualRoute[] = []
-  const storyModules = await getStoryModules(rootDir)
 
   for (const storyModule of storyModules) {
     logger.debug(

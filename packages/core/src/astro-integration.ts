@@ -8,6 +8,8 @@ import colors from 'yoctocolors'
 
 import { resolveOptions } from './options'
 import { createPathBuilder } from './utils/path-builder'
+import { getStoryModules } from './virtual-module/get-story-modules'
+import { serializeStoryModules } from './virtual-module/story-modules'
 import {
   createVirtualRouteComponent,
   getVirtualRoutes,
@@ -30,6 +32,7 @@ export function createAstrobookIntegration(
         updateConfig,
         injectRoute,
         createCodegenDir,
+        addWatchFile,
         config,
         logger,
         command,
@@ -83,8 +86,9 @@ export function createAstrobookIntegration(
 
         logger.debug(`Scanning for stories in ${rootDir}`)
 
-        const routes = await getVirtualRoutes(
-          rootDir,
+        const storyModules = await getStoryModules(rootDir)
+        const routes = getVirtualRoutes(
+          storyModules,
           codegenDir,
           logger,
           dashboardSubpath,
@@ -102,11 +106,20 @@ export function createAstrobookIntegration(
           }),
         )
 
+        // The plugin rewrites this file when the stories change, which makes
+        // Astro restart and inject the new routes.
+        const manifestPath = path.join(codegenDir, 'story-modules.mjs')
+        const serializedStoryModules = serializeStoryModules(storyModules)
+        await fs.writeFile(manifestPath, serializedStoryModules, 'utf-8')
+        addWatchFile(manifestPath)
+
         updateConfig({
           vite: {
             plugins: [
               createVirtualFilesPlugin(
                 rootDir,
+                manifestPath,
+                serializedStoryModules,
                 {
                   astrobookBase,
                   dashboardBase,
