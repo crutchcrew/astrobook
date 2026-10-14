@@ -69,7 +69,9 @@ export function createVirtualFilesPlugin(
 
   /**
    * Runs one rescan at a time, so an older scan can never finish last and
-   * write a stale list. A change during a scan queues one more.
+   * write a stale list. A change during a scan queues one more. It never
+   * rejects: a half-written story that fails to parse keeps the previous list
+   * until the next save, instead of an unhandled rejection in the watcher.
    */
   function syncStoryModules(): Promise<void> {
     if (syncing) {
@@ -79,7 +81,11 @@ export function createVirtualFilesPlugin(
     syncing = (async () => {
       do {
         rescanAgain = false
-        await rescanStoryModules()
+        try {
+          await rescanStoryModules()
+        } catch (error) {
+          logger.warn(`Unable to scan stories: ${String(error)}`)
+        }
       } while (rescanAgain)
     })().finally(() => {
       syncing = undefined
