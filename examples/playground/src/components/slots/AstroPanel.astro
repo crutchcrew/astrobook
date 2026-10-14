@@ -1,0 +1,13 @@
+---
+interface Props {
+  title?: string
+}
+
+const { title } = Astro.props
+---
+
+<section class="panel" data-title={title}>
+  <header class="panel-header"><slot name="header" /></header>
+  <div class="panel-body"><slot /></div>
+  <footer class="panel-footer"><slot name="footer" /></footer>
+</section>

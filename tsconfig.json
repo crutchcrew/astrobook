@@ -19,7 +19,13 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true
   },
-  "include": ["./*.js", "./*.ts", "./tests", "tests/example-urls.js"],
+  "include": [
+    "./*.js",
+    "./*.ts",
+    "./scripts",
+    "./tests",
+    "tests/example-urls.js"
+  ],
   "files": [],
   "references": [
     {

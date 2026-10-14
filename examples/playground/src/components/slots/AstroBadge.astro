@@ -1,0 +1,9 @@
+---
+interface Props {
+  label?: string
+}
+
+const { label = 'Badge' } = Astro.props
+---
+
+<span class="badge">{label}</span>

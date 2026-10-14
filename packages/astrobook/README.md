@@ -160,6 +160,44 @@ export const PrimaryButton = {
 
 This will render the button, wrapped in a red border, which is then wrapped in a green border.
 
+### Slots
+
+A story's `slots` property fills the component's slots, keyed by slot name. Use `default` for the default slot. A slot takes an HTML string, a component, or an object with a component and the props to pass to it.
+
+```astro
+<!-- Card.astro -->
+<article>
+  <header><slot name="header" /></header>
+  <slot />
+</article>
+```
+
+```ts
+// Card.stories.ts
+import Badge from './Badge.astro'
+import Card from './Card.astro'
+
+export default {
+  component: Card,
+}
+
+export const WithText = {
+  slots: {
+    header: '<h2>Kitchen notes</h2>',
+    default: '<p>A surface for <strong>content</strong>.</p>',
+  },
+}
+
+export const WithBadge = {
+  slots: {
+    header: { component: Badge, props: { label: 'New' } },
+    default: Badge,
+  },
+}
+```
+
+Slots work for framework components too: Astro passes them the way it passes slots from an `.astro` file, so a React component gets the default slot as `children`. Slot content is rendered into HTML by Astro, so components in a slot are not hydrated.
+
 ### Single-story hoisting
 
 Stories named the same as their module will get automatically hoisted up to replace their parent component in the UI, if they're the only story exported from their module.

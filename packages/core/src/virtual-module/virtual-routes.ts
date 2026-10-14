@@ -93,21 +93,28 @@ export function createVirtualRouteComponent(route: VirtualRoute): string {
 
 import StoryPage from 'astrobook/pages/story.astro';
 import WithDecorators from 'astrobook/components/with-decorators.astro';
-import { parseStoryDefaultExport, parseStoryNamedExport } from 'astrobook/client';
+import { parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
 
 import * as ${modName} from '${route.storyModule.importPath}';
 
 const { isAstroComponent } = parseStoryDefaultExport(${modName}, '${route.storyModule.importPath}');
-const { decorators, args } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
+const { decorators, args, slots } = parseStoryNamedExport(${modName}, '${route.storyModule.importPath}', '${route.story.name}');
+
+// The same hydration props that Astro's compiler adds for \`client:load\`.
+const props = isAstroComponent ? args : {
+  ...args,
+  'client:load': true,
+  'client:component-hydration': 'load',
+  'client:component-path': '${route.storyModule.importPath}',
+  'client:component-export': 'default.component',
+};
 ---
 
 <StoryPage story={'${route.props.story}'} hasSidebar={${route.props.hasSidebar}}>
   <WithDecorators decorators={decorators}>
-    {isAstroComponent ? (
-      <${modName}.default.component {...args} />
-    ) : (
-      <${modName}.default.component {...args} client:load />
-    )}
+    <StoryComponent component={${modName}.default.component} props={props} slots={slots} />
+    {/* Never rendered: Astro bundles an island's client code only for a \`client:*\` directive it compiles. */}
+    {false && <${modName}.default.component client:load />}
   </WithDecorators>
 </StoryPage>
 `.trim()
