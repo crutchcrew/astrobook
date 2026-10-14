@@ -18,6 +18,18 @@ import { createVirtualFilesPlugin } from './virtual-module/vite-plugin'
 
 export type { IntegrationOptions }
 
+/**
+ * Setup runs again on every restart while the old server still watches the
+ * generated files. Rewriting one unchanged would make that server reload the
+ * open page into the restart, or restart Astro a second time.
+ */
+async function writeFileIfChanged(filePath: string, content: string) {
+  const existing = await fs.readFile(filePath, 'utf-8').catch(() => undefined)
+  if (existing === content) return
+  await fs.mkdir(path.dirname(filePath), { recursive: true })
+  await fs.writeFile(filePath, content, 'utf-8')
+}
+
 export function createAstrobookIntegration(
   userOptions?: IntegrationOptions,
 ): AstroIntegration {
@@ -98,19 +110,19 @@ export function createAstrobookIntegration(
 
         logger.debug(`Writing files to ${codegenDir}`)
         await Promise.all(
-          Array.from(routes.values(), async (route) => {
-            const filePath = route.entrypoint
-            const fileContent = createVirtualRouteComponent(route)
-            await fs.mkdir(path.dirname(filePath), { recursive: true })
-            await fs.writeFile(filePath, fileContent, { encoding: 'utf-8' })
-          }),
+          Array.from(routes.values(), (route) =>
+            writeFileIfChanged(
+              route.entrypoint,
+              createVirtualRouteComponent(route),
+            ),
+          ),
         )
 
         // The plugin rewrites this file when the stories change, which makes
         // Astro restart and inject the new routes.
         const manifestPath = path.join(codegenDir, 'story-modules.mjs')
         const serializedStoryModules = serializeStoryModules(storyModules)
-        await fs.writeFile(manifestPath, serializedStoryModules, 'utf-8')
+        await writeFileIfChanged(manifestPath, serializedStoryModules)
         addWatchFile(manifestPath)
 
         updateConfig({
