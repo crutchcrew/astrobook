@@ -59,18 +59,20 @@ export function createVirtualFilesPlugin(
    * story added, renamed or removed later needs Astro itself to restart; a Vite
    * restart only refreshes the sidebar and leaves the new story's route a 404.
    * Astro restarts when a file passed to `addWatchFile` changes, so rewrite it.
-   * Resolves to whether the stories changed, and so a restart is coming.
    */
-  async function rescanStoryModules(): Promise<boolean> {
+  async function rescanStoryModules() {
     const newStoryModules = await loadStoryModules(rootDir)
-    if (newStoryModules === storyModules) return false
+    if (newStoryModules === storyModules) return
     storyModules = newStoryModules
+    restartPending = true
     logger.info(`Stories changed, restarting`)
     await fs.writeFile(manifestPath, storyModules, 'utf-8')
-    return true
   }
 
-  let syncing: Promise<boolean> | undefined
+  // Astro sets the integration up again on restart, so this plugin never sees
+  // the flag cleared.
+  let restartPending = false
+  let syncing: Promise<void> | undefined
   let rescanAgain = false
 
   /**
@@ -79,22 +81,20 @@ export function createVirtualFilesPlugin(
    * rejects: a half-written story that fails to parse keeps the previous list
    * until the next save, instead of an unhandled rejection in the watcher.
    */
-  function syncStoryModules(): Promise<boolean> {
+  function syncStoryModules(): Promise<void> {
     if (syncing) {
       rescanAgain = true
       return syncing
     }
     syncing = (async () => {
-      let changed = false
       do {
         rescanAgain = false
         try {
-          changed = (await rescanStoryModules()) || changed
+          await rescanStoryModules()
         } catch (error) {
           logger.warn(`Unable to scan stories: ${String(error)}`)
         }
       } while (rescanAgain)
-      return changed
     })().finally(() => {
       syncing = undefined
     })
@@ -102,7 +102,7 @@ export function createVirtualFilesPlugin(
   }
 
   let storyUpdate:
-    { file: string; timestamp: number; changed: Promise<boolean> } | undefined
+    { file: string; timestamp: number; synced: Promise<void> } | undefined
 
   /**
    * Vite calls `hotUpdate` once per environment for the same change, so they
@@ -110,9 +110,9 @@ export function createVirtualFilesPlugin(
    */
   function syncStoryUpdate(file: string, timestamp: number) {
     if (storyUpdate?.file !== file || storyUpdate.timestamp !== timestamp) {
-      storyUpdate = { file, timestamp, changed: syncStoryModules() }
+      storyUpdate = { file, timestamp, synced: syncStoryModules() }
     }
-    return storyUpdate.changed
+    return storyUpdate.synced
   }
 
   function isStoryFile(filePath: string) {
@@ -187,11 +187,14 @@ export function createVirtualFilesPlugin(
        * the old server would render it during the restart, and the page would
        * keep the old stories. Without the reload the page stays on the old
        * server's socket, which the restart closes, and the page reloads once
-       * the new server answers (see `dev-reload.ts` in `@astrobook/ui`).
+       * the new server answers (see `dev-reload.ts` in `@astrobook/ui`). The
+       * flag also covers a story added or removed, whose rescan the watcher
+       * may have finished before this hook runs.
        */
       async handler({ file, timestamp }) {
         if (!isStoryFile(file)) return
-        if (await syncStoryUpdate(file, timestamp)) return []
+        await syncStoryUpdate(file, timestamp)
+        if (restartPending) return []
       },
     },
   }
