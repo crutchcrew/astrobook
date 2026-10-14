@@ -1,4 +1,4 @@
-import type { StorySlot } from '@astrobook/types'
+import type { StorySlot, StorySlotItem } from '@astrobook/types'
 import {
   createComponent,
   render,
@@ -14,13 +14,18 @@ interface StoryComponentProps {
   slots?: Record<string, StorySlot> | null | undefined
 }
 
-function renderSlot(result: SSRResult, name: string, slot: StorySlot) {
-  if (typeof slot === 'string') {
-    return render`${unescapeHTML(slot)}`
+function renderSlotItem(result: SSRResult, name: string, item: StorySlotItem) {
+  if (typeof item === 'string') {
+    return render`${unescapeHTML(item)}`
   }
   const { component, props } =
-    'component' in slot ? slot : { component: slot, props: undefined }
+    'component' in item ? item : { component: item, props: undefined }
   return render`${renderComponent(result, name, component, props ?? {})}`
+}
+
+function renderSlot(result: SSRResult, name: string, slot: StorySlot) {
+  const items: StorySlotItem[] = [slot].flat()
+  return render`${items.map((item) => renderSlotItem(result, name, item))}`
 }
 
 /**
