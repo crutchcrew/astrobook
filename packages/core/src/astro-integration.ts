@@ -148,6 +148,12 @@ export function createAstrobookIntegration(
           })
         }
         injectRoute({
+          // File endpoints must never gain a trailing slash.
+          pattern: buildPath(astrobookSubpath, 'meta.json').replace(/\/$/, ''),
+          entrypoint: 'astrobook/pages/meta.json.ts',
+          prerender: true,
+        })
+        injectRoute({
           pattern: astrobookSubpath,
           entrypoint: 'astrobook/pages/app.astro',
           prerender: true,

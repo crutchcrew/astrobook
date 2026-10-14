@@ -92,7 +92,7 @@ import type { StoryContext } from '@astrobook/types';
 import globalDecorators from 'virtual:astrobook/decorators.mjs';
 import StoryPage from 'astrobook/pages/story.astro';
 import WithDecorators from 'astrobook/components/with-decorators.astro';
-import { getStoryLabels, parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
+import { getStoryLabels, mergeStoryParameters, parseStoryDefaultExport, parseStoryNamedExport, StoryComponent } from 'astrobook/client';
 
 import * as ${modName} from '${route.storyModule.importPath}';
 
@@ -104,7 +104,7 @@ const story: StoryContext = {
   id: ${JSON.stringify(route.story.id)},
   name: labels.name,
   module: { ...${JSON.stringify({ id: route.storyModule.id, name: route.storyModule.name, directory: route.storyModule.directory })}, title: labels.title },
-  parameters: { ...defaultParameters, ...parameters },
+  parameters: mergeStoryParameters(defaultParameters, parameters),
 };
 const allDecorators = [
   ...globalDecorators.map((component) => ({ component, props: { story } })),

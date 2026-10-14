@@ -167,3 +167,13 @@ export function getStoryLabels(
   const title = module.title ?? module.name
   return { title, name: story.name ?? (hoisted ? title : exportName) }
 }
+
+/**
+ * Shallow-merge module defaults with a story's parameters.
+ */
+export function mergeStoryParameters(
+  defaults: StoryNamedExport['parameters'],
+  story: StoryNamedExport['parameters'],
+): Record<string, unknown> {
+  return { ...defaults, ...story }
+}

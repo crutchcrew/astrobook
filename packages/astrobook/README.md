@@ -256,6 +256,48 @@ export const Button = {}
 
 This story will not get nested to `Button/Button` in the UI, but simply `Button`.
 
+## Visual tests
+
+Astrobook exposes `<Astro base>/<Astrobook subpath>/meta.json` in development and production. Its `stories` array follows sidebar order and includes display names, module details, merged JSON-safe parameters, preview `url`, and `dashboardUrl`. Unsupported parameter values are omitted according to `JSON.stringify`; serialization failures emit a warning and use `{}` for that story.
+
+Story pages set `data-astrobook-story-loaded` on `<html>` after fonts load, `client:load`, `client:idle`, and `client:only` islands hydrate, and two animation frames pass. This also works with dashboard navigation. It does not wait for `client:visible` or `client:media` islands.
+
+Install Playwright (`npm install -D @playwright/test` and `npx playwright install`), start Astrobook, and save this as `tests/visual.spec.ts`. Run it with `npx playwright test --update-snapshots` to create baselines, then `npx playwright test` to compare them.
+
+```ts
+import { expect, test } from '@playwright/test'
+
+const origin = 'http://localhost:4321'
+// Include your Astro base and Astrobook subpath here, if configured.
+const metaUrl = `${origin}/meta.json`
+
+interface Story {
+  id: string
+  url: string
+  parameters: { screenshot?: boolean }
+}
+
+test('story screenshots', async ({ page, request }) => {
+  test.setTimeout(0)
+  const response = await request.get(metaUrl)
+  expect(response.ok()).toBe(true)
+  const { stories }: { stories: Story[] } = await response.json()
+
+  for (const story of stories) {
+    if (story.parameters.screenshot === false) continue
+    await test.step(story.id, async () => {
+      await page.goto(new URL(story.url, origin).href)
+      await page.locator('html[data-astrobook-story-loaded]').waitFor()
+      await expect(page).toHaveScreenshot(
+        `${story.id.replaceAll('/', '--')}.png`,
+      )
+    })
+  }
+})
+```
+
+Setting `parameters: { screenshot: false }` is a convention used by this test suite to skip a story; Astrobook itself does not interpret that parameter. Configure Playwright timeouts to suit your stories; the readiness signal has no timeout.
+
 ## Options
 
 ### `directory`
