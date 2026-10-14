@@ -100,7 +100,7 @@ test.describe('Module collapse', () => {
     const stories = page.locator(
       'details[data-id="module:react/react-counter"] a',
     )
-    await expect(stories).toHaveCount(2)
+    await expect(stories).toHaveCount(3)
   })
 })
 

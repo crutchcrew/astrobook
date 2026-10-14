@@ -13,3 +13,12 @@ export const LargeStep = {
     step: 5,
   } satisfies PreactCounterProps,
 }
+
+export const WithSlot = {
+  args: {
+    step: 2,
+  },
+  slots: {
+    default: '<em class="slot-content">Slot content</em>',
+  },
+}

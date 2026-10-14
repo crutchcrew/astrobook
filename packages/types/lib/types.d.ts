@@ -364,6 +364,28 @@ export interface StoryDecorator {
 }
 
 /**
+ * The content of a slot: an HTML string, a component, or a component with its
+ * props as a {@link StorySlotComponent}.
+ */
+// Components of every framework are objects or functions, so `object` covers them.
+export type StorySlot = string | StorySlotComponent | object
+
+/**
+ * A component, and the props to pass to it, to render into a slot.
+ */
+export interface StorySlotComponent {
+  /**
+   * The component to render into the slot.
+   */
+  component: unknown
+
+  /**
+   * The props to pass to the component.
+   */
+  props?: object | null | undefined
+}
+
+/**
  * @internal
  */
 export interface StoryNamedExport {
@@ -376,6 +398,12 @@ export interface StoryNamedExport {
    * The arguments to pass to the story.
    */
   args?: object | null | undefined
+
+  /**
+   * The slots to pass to the story, keyed by slot name. Use `default` for the
+   * default slot.
+   */
+  slots?: Record<string, StorySlot> | null | undefined
 }
 
 declare global {

@@ -2,6 +2,7 @@ import type { StoryNamedExport } from '@astrobook/types'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 
 export { createPathBuilder, type PathBuilder } from './utils/path-builder'
+export { StoryComponent } from './story-component'
 
 // Copy from https://github.com/withastro/astro/blob/astro@5.0.0/packages/astro/src/runtime/server/render/astro/factory.ts#L15
 function isAstroComponentFactory(obj: unknown): obj is AstroComponentFactory {
@@ -82,5 +83,26 @@ export function parseStoryNamedExport(
     )
   }
 
-  return { decorators, args }
+  const slots = 'slots' in storyObject ? storyObject.slots : undefined
+  if (slots != null && typeof slots !== 'object') {
+    throw new TypeError(
+      `[astrobook] The 'slots' property of the named export '${storyName}' from '${importPath}' should be an object or undefined, but got ${typeof slots}`,
+    )
+  }
+  for (const [name, slot] of Object.entries(slots ?? {})) {
+    if (
+      slot == null ||
+      !['string', 'object', 'function'].includes(typeof slot)
+    ) {
+      throw new TypeError(
+        `[astrobook] The '${name}' slot of the named export '${storyName}' from '${importPath}' should be an HTML string or a component, but got ${slot === null ? 'null' : typeof slot}`,
+      )
+    }
+  }
+
+  return {
+    decorators,
+    args,
+    slots: slots as StoryNamedExport['slots'],
+  }
 }
