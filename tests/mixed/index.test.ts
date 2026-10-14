@@ -44,3 +44,23 @@ test('mixed example', async ({ page }) => {
     await testCounter(page, 5)
   })
 })
+
+test('metadata includes the Astro base and Astrobook subpaths', async ({
+  request,
+  page,
+}) => {
+  const response = await request.get(`${BASE_URL}/astrobook-subpath/meta.json`)
+  expect(response.ok()).toBe(true)
+  const { stories } = (await response.json()) as { stories: { url: string }[] }
+  expect(stories).toContainEqual(
+    expect.objectContaining({
+      id: 'preact-counter/large-step',
+      name: 'LargeStep',
+      url: '/astro-base/astrobook-subpath/preview-subpath/preact-counter/large-step',
+      dashboardUrl:
+        '/astro-base/astrobook-subpath/dashboard-subpath/preact-counter/large-step',
+    }),
+  )
+  await page.goto(new URL(stories[0].url, BASE_URL).href)
+  await expect(page.locator('html[data-astrobook-story-loaded]')).toHaveCount(1)
+})

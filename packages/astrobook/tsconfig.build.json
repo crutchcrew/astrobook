@@ -7,5 +7,5 @@
     "rootDir": "./src",
     "composite": true
   },
-  "include": ["./**/*.ts"]
+  "include": ["./src/**/*.ts"]
 }

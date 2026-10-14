@@ -7,6 +7,7 @@ type AstroCounterProps = ComponentProps<typeof AstroCounter>
 export default {
   component: AstroCounter,
   title: 'Astro Counter',
+  parameters: { theme: 'light', layout: 'centered' },
 }
 
 export const Default = {
@@ -15,6 +16,7 @@ export const Default = {
 
 export const LargeStep = {
   name: 'Count by five',
+  parameters: { theme: 'dark', screenshot: false },
   args: {
     step: 5,
   } satisfies AstroCounterProps,
