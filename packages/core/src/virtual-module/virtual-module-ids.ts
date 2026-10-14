@@ -18,3 +18,6 @@ export const USER_CSS_RESOLVED_ID = '__virtual_astrobook_user_css__.mjs'
 
 export const DECORATORS_ID = 'virtual:astrobook/decorators.mjs'
 export const DECORATORS_RESOLVED_ID = '__virtual_astrobook_decorators__.mjs'
+
+export const STORY_META_ID = 'virtual:astrobook/story-meta.mjs'
+export const STORY_META_RESOLVED_ID = '__virtual_astrobook_story_meta__.mjs'

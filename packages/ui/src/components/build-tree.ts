@@ -1,4 +1,5 @@
-import type { StoryModule } from '@astrobook/types'
+import { getStoryLabels } from '@astrobook/core/client'
+import type { StoryMeta, StoryModule } from '@astrobook/types'
 
 import { compressTerms } from './compress-terms'
 
@@ -53,27 +54,37 @@ function findOrCreateDirectory(
   return current
 }
 
-export function buildTree(modules: StoryModule[]): TreeNode[] {
+export function buildTree(
+  modules: StoryModule[],
+  meta: StoryMeta = {},
+): TreeNode[] {
   const root: TreeNode[] = []
 
   for (const module of modules) {
     const segments = module.directory ? module.directory.split('/') : []
     const children = findOrCreateDirectory(root, segments)
 
+    const moduleMeta = meta[module.id]
+    const hoisted = isSingleStory(module)
     const storyNodes: StoryNode[] = module.stories.map((story) => ({
       type: 'story',
       id: story.id,
-      name: story.name,
+      name: getStoryLabels(
+        { name: module.name, title: moduleMeta?.title },
+        moduleMeta?.stories[story.id] ?? {},
+        story.name,
+        hoisted,
+      ).name,
       searchText: '',
     }))
 
-    if (isSingleStory(module)) {
+    if (hoisted) {
       children.push(storyNodes[0])
     } else {
       const moduleNode: ModuleNode = {
         type: 'module',
         id: module.id,
-        name: module.name,
+        name: moduleMeta?.title ?? module.name,
         searchText: '',
         children: storyNodes,
       }

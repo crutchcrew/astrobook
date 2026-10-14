@@ -12,6 +12,7 @@ const { story } = Astro.props
   data-testid="global-decorator"
   data-story-id={story.id}
   data-story-name={story.name}
+  data-module-title={story.module.title}
   data-story-params={JSON.stringify(story.parameters)}
 >
   <slot />

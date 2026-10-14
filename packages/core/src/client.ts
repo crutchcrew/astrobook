@@ -19,6 +19,7 @@ export function parseStoryDefaultExport(
   importPath: string,
 ): {
   isAstroComponent: boolean
+  title?: string
   parameters: StoryNamedExport['parameters']
 } {
   const defaultExport = 'default' in module ? module['default'] : undefined
@@ -30,6 +31,13 @@ export function parseStoryDefaultExport(
   if (typeof defaultExport !== 'object') {
     throw new TypeError(
       `[astrobook] '${importPath}' default export should be an object, but got ${typeof defaultExport}`,
+    )
+  }
+
+  const title = 'title' in defaultExport ? defaultExport.title : undefined
+  if (title !== undefined && typeof title !== 'string') {
+    throw new TypeError(
+      `[astrobook] The 'title' property of the default export from '${importPath}' should be a string or undefined, but got ${typeof title}`,
     )
   }
 
@@ -54,6 +62,7 @@ export function parseStoryDefaultExport(
 
   return {
     isAstroComponent,
+    title,
     parameters: parameters as StoryNamedExport['parameters'],
   }
 }
@@ -76,6 +85,13 @@ export function parseStoryNamedExport(
   if (typeof storyObject !== 'object') {
     throw new TypeError(
       `[astrobook] Named export '${storyName}' from '${importPath}' should be an object, but got ${typeof storyObject}`,
+    )
+  }
+
+  const name = 'name' in storyObject ? storyObject.name : undefined
+  if (name !== undefined && typeof name !== 'string') {
+    throw new TypeError(
+      `[astrobook] The 'name' property of the named export '${storyName}' from '${importPath}' should be a string or undefined, but got ${typeof name}`,
     )
   }
 
@@ -125,6 +141,7 @@ export function parseStoryNamedExport(
   }
 
   return {
+    name,
     decorators,
     args,
     parameters: parameters as StoryNamedExport['parameters'],
@@ -136,4 +153,17 @@ function describe(value: unknown): string {
   if (value === null) return 'null'
   if (Array.isArray(value)) return 'a nested array'
   return typeof value
+}
+
+/**
+ * Shared display labels for rendered stories and runtime sidebar metadata.
+ */
+export function getStoryLabels(
+  module: { name: string; title?: string },
+  story: { name?: string },
+  exportName: string,
+  hoisted = false,
+): { name: string; title: string } {
+  const title = module.title ?? module.name
+  return { title, name: story.name ?? (hoisted ? title : exportName) }
 }

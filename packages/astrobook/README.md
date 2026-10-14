@@ -221,6 +221,19 @@ export const WithBadgeAndText = {
 
 Slots work for framework components too: Astro passes them the way it passes slots from an `.astro` file, so a React component gets the default slot as `children`. Slot content is rendered into HTML by Astro, so components in a slot are not hydrated.
 
+### Display names
+
+Set `title` on the default export to label the module, and `name` on a story to label it in the sidebar, search, and browser tab:
+
+```ts
+export default { component: Button, title: 'Action buttons' }
+export const Large = { name: 'Large button', args: { size: 'large' } }
+```
+
+Labels can also come from story helper calls. Both fields accept a string or `undefined`; omitted labels fall back to the file name and export name. IDs and URLs always use the file path and export name. Single-story hoisting still compares those original names, and its label uses the story `name`, then module `title`, then file name.
+
+Decorators receive the display label as `story.name` and the module label as `story.module.title`; `story.module.name` keeps the original file name.
+
 ### Single-story hoisting
 
 Stories named the same as their module will get automatically hoisted up to replace their parent component in the UI, if they're the only story exported from their module.

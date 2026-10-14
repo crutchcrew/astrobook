@@ -124,3 +124,66 @@ describe('buildTree', () => {
     expect(dir.children[1].type).toBe('story')
   })
 })
+
+describe('display labels', () => {
+  it('uses module and story labels while preserving ids and raw fallbacks', () => {
+    const module = makeModule('button', '', 'Button', ['Default', 'Large'])
+    const tree = buildTree([module], {
+      button: {
+        title: 'Friendly buttons',
+        parameters: {},
+        stories: { 'button/Large': { name: 'Big button', parameters: {} } },
+      },
+    })
+    expect(tree[0]).toMatchObject({
+      type: 'module',
+      id: 'button',
+      name: 'Friendly buttons',
+      children: [
+        { id: 'button/Default', name: 'Default' },
+        { id: 'button/Large', name: 'Big button' },
+      ],
+    })
+    expect(tree[0].children?.[1].searchText).toContain('big button')
+    expect(module.name).toBe('Button')
+    expect(module.stories[1].name).toBe('Large')
+  })
+
+  it.each([
+    { title: 'Module label', name: 'Story label', expected: 'Story label' },
+    { title: 'Module label', name: undefined, expected: 'Module label' },
+    { title: undefined, name: undefined, expected: 'Button' },
+    { title: 'Module label', name: '', expected: '' },
+  ])(
+    'hoists using raw names and labels the node $expected',
+    ({ title, name, expected }) => {
+      const module = makeModule('button', '', 'Button', ['Button'])
+      expect(
+        buildTree([module], {
+          button: {
+            title,
+            parameters: {},
+            stories: {
+              'button/Button': { name, parameters: {} },
+            },
+          },
+        })[0],
+      ).toMatchObject({ type: 'story', id: 'button/Button', name: expected })
+    },
+  )
+
+  it('does not hoist when display labels match but export names differ', () => {
+    const module = makeModule('button', '', 'Button', ['Default'])
+    expect(
+      buildTree([module], {
+        button: {
+          title: 'Label',
+          parameters: {},
+          stories: {
+            'button/Default': { name: 'Label', parameters: {} },
+          },
+        },
+      })[0].type,
+    ).toBe('module')
+  })
+})

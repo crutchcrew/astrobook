@@ -1,9 +1,10 @@
 ---
+import meta from 'virtual:astrobook/story-meta.mjs'
 import modules from 'virtual:astrobook/story-modules.mjs'
 import { buildTree } from './build-tree'
 import SidebarTreeNode from './sidebar-tree-node.astro'
 
-const tree = buildTree(modules)
+const tree = buildTree(modules, meta)
 ---
 
 <astrobook-sidebar-tree

@@ -53,3 +53,33 @@ describe('story parameters', () => {
     },
   )
 })
+
+describe('display name validation', () => {
+  it.each([undefined, '', 'Human label'])('accepts %j', (label) => {
+    const module = {
+      default: { component: {}, title: label },
+      Default: { name: label },
+    }
+    expect(parseStoryDefaultExport(module, importPath).title).toBe(label)
+    expect(parseStoryNamedExport(module, importPath, 'Default').name).toBe(
+      label,
+    )
+  })
+
+  it.each([null, 123, true, {}, [], () => {}])('rejects %j', (label) => {
+    const module = {
+      default: { component: {}, title: label },
+      Default: { name: label },
+    }
+    expect(() => parseStoryDefaultExport(module, importPath)).toThrow(
+      new TypeError(
+        `[astrobook] The 'title' property of the default export from '${importPath}' should be a string or undefined, but got ${typeof label}`,
+      ),
+    )
+    expect(() => parseStoryNamedExport(module, importPath, 'Default')).toThrow(
+      new TypeError(
+        `[astrobook] The 'name' property of the named export 'Default' from '${importPath}' should be a string or undefined, but got ${typeof label}`,
+      ),
+    )
+  })
+})
