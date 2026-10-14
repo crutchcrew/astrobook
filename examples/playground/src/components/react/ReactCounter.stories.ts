@@ -1,3 +1,5 @@
+import AstroDecorator from '../decorators/AstroDecorator.astro'
+
 import { ReactCounter, type ReactCounterProps } from './ReactCounter'
 
 export default {
@@ -21,4 +23,11 @@ export const WithSlot = {
   slots: {
     default: '<em class="slot-content">Slot content</em>',
   },
+}
+
+export const StepVariants = {
+  args: { step: 99 } satisfies ReactCounterProps,
+  variants: { step: { One: 1, Five: 5, Ten: 10 } },
+  slots: { default: '<em class="variant-slot">Independent counter</em>' },
+  decorators: [{ component: AstroDecorator, props: { label: 'Variant cell' } }],
 }

@@ -461,6 +461,20 @@ export interface StoryNamedExport {
   args?: object | null | undefined
 
   /**
+   * Prop values to render together as a cartesian product, in key order.
+   * Each axis must be a non-empty array or a non-empty label-to-value record.
+   * Array labels use String(value), or JSON.stringify for objects and arrays.
+   * Cell values override args; slots are repeated in every cell. Global
+   * decorators wrap the grid once, while story decorators wrap each cell.
+   * One axis renders a wrapping row; multiple axes render a table with the
+   * last axis as columns. An empty variants object renders the usual story.
+   *
+   * @example { size: ['sm', 'md', 'lg'] }
+   * @example { size: { Small: 'sm', Large: 'lg' }, color: ['red', 'blue'] }
+   */
+  variants?: Record<string, unknown[] | Record<string, unknown>>
+
+  /**
    * The slots to pass to the story, keyed by slot name. Use `default` for the
    * default slot.
    */
@@ -501,7 +515,11 @@ export type StoryMeta = Record<
     parameters: Record<string, unknown>
     stories: Record<
       string,
-      { name?: string; parameters: Record<string, unknown> }
+      {
+        name?: string
+        parameters: Record<string, unknown>
+        variants?: Record<string, string[]>
+      }
     >
   }
 >
