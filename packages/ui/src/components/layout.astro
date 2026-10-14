@@ -16,6 +16,7 @@ import { ClientRouter } from 'astro:transitions'
 import 'virtual:astrobook/user-css.mjs'
 
 interface Props {
+  label?: string
   story: string | undefined
   hasSidebar: boolean
 }
@@ -37,7 +38,13 @@ const DEFAULT_SIDEBAR_RESIZING = false
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>{config.title}</title>
+    <title>
+      {
+        Astro.props.label !== undefined
+          ? `${Astro.props.label} · ${config.title}`
+          : config.title
+      }
+    </title>
     <ThemeScript />
     <script>
       import { initThemeMessage } from './theme-message'

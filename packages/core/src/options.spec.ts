@@ -25,6 +25,7 @@ describe('resolveOptions', () => {
       previewSubpath: 'stories',
       title: 'Astrobook',
       css: [],
+      decorators: [],
       head: 'astrobook/components/head.astro',
       home: 'astrobook/components/home.astro',
       homeContent: defaultHomeContent,
@@ -46,11 +47,27 @@ describe('resolveOptions', () => {
       previewSubpath: 'stories',
       title: 'My Library',
       css: ['./styles/main.css'],
+      decorators: [],
       head: 'astrobook/components/head.astro',
       home: './MyCustomHome.astro',
       homeContent: defaultHomeContent,
     })
   })
+
+  it('should preserve decorator order', () => {
+    const decorators = ['./Outer.astro', 'package/Inner']
+    expect(resolveOptions({ decorators }).decorators).toEqual(decorators)
+  })
+
+  it.each([null, 'Decorator.astro', [123]])(
+    'should reject invalid decorators %j',
+    (decorators) => {
+      expect(() => {
+        // @ts-expect-error - testing invalid type
+        resolveOptions({ decorators })
+      }).toThrow(/Invalid Astrobook options:/)
+    },
+  )
 
   it('should treat `home: false` as the empty home component', () => {
     const resolved = resolveOptions({ home: false })

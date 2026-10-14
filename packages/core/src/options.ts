@@ -62,6 +62,7 @@ const IntegrationOptionsSchema = v.optional(
     previewSubpath: v.optional(v.string(), 'stories'),
     title: v.optional(v.string(), 'Astrobook'),
     css: v.optional(v.array(v.string()), []),
+    decorators: v.optional(v.array(v.string()), []),
     head: v.optional(v.string(), 'astrobook/components/head.astro'),
     home: HomeSchema,
     homeContent: HomeContentSchema,

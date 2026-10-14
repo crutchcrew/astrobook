@@ -19,6 +19,8 @@ export function parseStoryDefaultExport(
   importPath: string,
 ): {
   isAstroComponent: boolean
+  title?: string
+  parameters: StoryNamedExport['parameters']
 } {
   const defaultExport = 'default' in module ? module['default'] : undefined
   if (!defaultExport) {
@@ -29,6 +31,13 @@ export function parseStoryDefaultExport(
   if (typeof defaultExport !== 'object') {
     throw new TypeError(
       `[astrobook] '${importPath}' default export should be an object, but got ${typeof defaultExport}`,
+    )
+  }
+
+  const title = 'title' in defaultExport ? defaultExport.title : undefined
+  if (title !== undefined && typeof title !== 'string') {
+    throw new TypeError(
+      `[astrobook] The 'title' property of the default export from '${importPath}' should be a string or undefined, but got ${typeof title}`,
     )
   }
 
@@ -43,7 +52,19 @@ export function parseStoryDefaultExport(
   // Whether the component is an Astro component or not (e.g. React, Vue, etc.)
   const isAstroComponent: boolean = isAstroComponentFactory(component)
 
-  return { isAstroComponent }
+  const parameters =
+    'parameters' in defaultExport ? defaultExport.parameters : undefined
+  if (parameters != null && typeof parameters !== 'object') {
+    throw new TypeError(
+      `[astrobook] The 'parameters' property of the default export from '${importPath}' should be an object or undefined, but got ${typeof parameters}`,
+    )
+  }
+
+  return {
+    isAstroComponent,
+    title,
+    parameters: parameters as StoryNamedExport['parameters'],
+  }
 }
 
 /**
@@ -67,6 +88,13 @@ export function parseStoryNamedExport(
     )
   }
 
+  const name = 'name' in storyObject ? storyObject.name : undefined
+  if (name !== undefined && typeof name !== 'string') {
+    throw new TypeError(
+      `[astrobook] The 'name' property of the named export '${storyName}' from '${importPath}' should be a string or undefined, but got ${typeof name}`,
+    )
+  }
+
   const decorators =
     'decorators' in storyObject ? storyObject.decorators : undefined
 
@@ -80,6 +108,14 @@ export function parseStoryNamedExport(
   if (args != null && typeof args !== 'object') {
     throw new TypeError(
       `[astrobook] The 'args' property of the named export '${storyName}' from '${importPath}' should be an object or undefined, but got ${typeof args}`,
+    )
+  }
+
+  const parameters =
+    'parameters' in storyObject ? storyObject.parameters : undefined
+  if (parameters != null && typeof parameters !== 'object') {
+    throw new TypeError(
+      `[astrobook] The 'parameters' property of the named export '${storyName}' from '${importPath}' should be an object or undefined, but got ${typeof parameters}`,
     )
   }
 
@@ -105,8 +141,10 @@ export function parseStoryNamedExport(
   }
 
   return {
+    name,
     decorators,
     args,
+    parameters: parameters as StoryNamedExport['parameters'],
     slots: slots as StoryNamedExport['slots'],
   }
 }
@@ -115,4 +153,17 @@ function describe(value: unknown): string {
   if (value === null) return 'null'
   if (Array.isArray(value)) return 'a nested array'
   return typeof value
+}
+
+/**
+ * Shared display labels for rendered stories and runtime sidebar metadata.
+ */
+export function getStoryLabels(
+  module: { name: string; title?: string },
+  story: { name?: string },
+  exportName: string,
+  hoisted = false,
+): { name: string; title: string } {
+  const title = module.title ?? module.name
+  return { title, name: story.name ?? (hoisted ? title : exportName) }
 }

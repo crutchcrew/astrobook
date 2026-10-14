@@ -2,16 +2,21 @@ import fs from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { GlobalConfig } from '@astrobook/types'
+import type { GlobalConfig, StoryModule } from '@astrobook/types'
 import type { AstroConfig, AstroIntegrationLogger } from 'astro'
 import type { Plugin, ViteDevServer } from 'vite'
 
+import { serializeStoryMeta } from './story-meta'
 import { loadStoryModules } from './story-modules'
 import {
+  DECORATORS_ID,
+  DECORATORS_RESOLVED_ID,
   COMPONENT_HEAD_ID,
   COMPONENT_HEAD_RESOLVED_ID,
   COMPONENT_HOME_ID,
   COMPONENT_HOME_RESOLVED_ID,
+  STORY_META_ID,
+  STORY_META_RESOLVED_ID,
   STORY_MODULES_ID,
   STORY_MODULES_RESOLVED_ID,
   GLOBAL_CONFIG_ID,
@@ -96,6 +101,10 @@ export function createVirtualFilesPlugin(
     name: 'astrobook/virtual-files',
     resolveId(id) {
       switch (id) {
+        case DECORATORS_ID:
+          return DECORATORS_RESOLVED_ID
+        case STORY_META_ID:
+          return STORY_META_RESOLVED_ID
         case STORY_MODULES_ID:
           return STORY_MODULES_RESOLVED_ID
         case GLOBAL_CONFIG_ID:
@@ -108,8 +117,26 @@ export function createVirtualFilesPlugin(
           return USER_CSS_RESOLVED_ID
       }
     },
-    load(id) {
+    load(id, options) {
       switch (id) {
+        case DECORATORS_RESOLVED_ID:
+          return [
+            ...config.decorators.map(
+              (id, index) => `import Decorator${index} from ${resolveId(id)};`,
+            ),
+            `export default [${config.decorators.map((_, index) => `Decorator${index}`).join(', ')}];`,
+          ].join('\n')
+        case STORY_META_RESOLVED_ID:
+          if (!options?.ssr) {
+            throw new Error(
+              '[astrobook] Story metadata is only available on the server',
+            )
+          }
+          return serializeStoryMeta(
+            JSON.parse(
+              storyModules.slice('export default '.length),
+            ) as StoryModule[],
+          )
         case STORY_MODULES_RESOLVED_ID:
           return storyModules
         case GLOBAL_CONFIG_RESOLVED_ID:

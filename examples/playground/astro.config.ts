@@ -19,6 +19,9 @@ export default defineConfig({
     solid({ include: ['**/solid/*'] }),
     svelte(),
     vue(),
-    astrobook({ directory: 'src/components' }),
+    astrobook({
+      directory: 'src/components',
+      decorators: ['./src/decorators/StoryContext.astro'],
+    }),
   ],
 })

@@ -19,3 +19,13 @@ declare module 'virtual:astrobook/components/home.mjs' {
 }
 
 declare module 'virtual:astrobook/user-css.mjs' {}
+
+declare module 'virtual:astrobook/decorators.mjs' {
+  const decorators: import('./types').StoryDecorator['component'][]
+  export default decorators
+}
+
+declare module 'virtual:astrobook/story-meta.mjs' {
+  const meta: import('./types').StoryMeta
+  export default meta
+}
