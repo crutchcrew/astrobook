@@ -115,6 +115,19 @@ export interface IntegrationOptions {
   head?: string
 
   /**
+   * Components to wrap every story, outside its own decorators. The first
+   * entry is outermost. Relative paths resolve against the project root;
+   * package identifiers are supported. Each component receives a `story` prop.
+   *
+   * @default []
+   * @example
+   * ```js
+   * astrobook({ decorators: ['./src/decorators/StoryContext.astro'] })
+   * ```
+   */
+  decorators?: string[]
+
+  /**
    * Controls which Astro component is rendered on the dashboard homepage.
    *
    * - Pass a string (relative path or package identifier) to fully replace
@@ -301,7 +314,30 @@ export interface Story {
   name: string
 }
 
+export interface StoryContext {
+  /**
+   * e.g. 'components/badge/default' — the URL segment of the story
+   */
+  id: string
+  /**
+   * The story's export name, e.g. 'Default'
+   */
+  name: string
+  module: { id: string; name: string; directory: string }
+  /**
+   * The default export's parameters shallow-merged with the story's parameters (story wins).
+   */
+  parameters: Record<string, unknown>
+}
+
 export interface GlobalConfig {
+  /**
+   * Components to wrap every story, in order with the first outermost.
+   * Each receives a `story` prop containing its StoryContext.
+   * @default []
+   */
+  decorators: string[]
+
   /**
    * The computed base URL path for Astrobook, combining the Astro base URL with
    * the optional subpath. Used for generating correct URLs throughout the
@@ -395,6 +431,12 @@ export interface StorySlotComponent {
  * @internal
  */
 export interface StoryNamedExport {
+  /**
+   * Free-form data for decorators and tooling. Shallow-merged over the default
+   * export's parameters, with the story's values taking precedence.
+   */
+  parameters?: Record<string, unknown> | null | undefined
+
   /**
    * The decorators to apply to the story.
    */

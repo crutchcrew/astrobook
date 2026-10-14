@@ -8,6 +8,8 @@ import type { Plugin, ViteDevServer } from 'vite'
 
 import { loadStoryModules } from './story-modules'
 import {
+  DECORATORS_ID,
+  DECORATORS_RESOLVED_ID,
   COMPONENT_HEAD_ID,
   COMPONENT_HEAD_RESOLVED_ID,
   COMPONENT_HOME_ID,
@@ -96,6 +98,8 @@ export function createVirtualFilesPlugin(
     name: 'astrobook/virtual-files',
     resolveId(id) {
       switch (id) {
+        case DECORATORS_ID:
+          return DECORATORS_RESOLVED_ID
         case STORY_MODULES_ID:
           return STORY_MODULES_RESOLVED_ID
         case GLOBAL_CONFIG_ID:
@@ -110,6 +114,13 @@ export function createVirtualFilesPlugin(
     },
     load(id) {
       switch (id) {
+        case DECORATORS_RESOLVED_ID:
+          return [
+            ...config.decorators.map(
+              (id, index) => `import Decorator${index} from ${resolveId(id)};`,
+            ),
+            `export default [${config.decorators.map((_, index) => `Decorator${index}`).join(', ')}];`,
+          ].join('\n')
         case STORY_MODULES_RESOLVED_ID:
           return storyModules
         case GLOBAL_CONFIG_RESOLVED_ID:

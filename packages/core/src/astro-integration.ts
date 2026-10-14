@@ -124,6 +124,7 @@ export function createAstrobookIntegration(
                   astrobookBase,
                   dashboardBase,
                   storyBase,
+                  decorators: resolvedOptions.decorators,
                   head: resolvedOptions.head,
                   home: resolvedOptions.home,
                   homeContent: resolvedOptions.homeContent,

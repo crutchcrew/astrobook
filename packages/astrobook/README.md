@@ -85,7 +85,7 @@
    .astro/
    ```
 
-5. Write stories. Astrobook scans all `.stories.{ts,tsx,js,jsx,mts,mjs}` files. It's compatible with a limited subset of Storybook's [Component Story Format v3](https://storybook.js.org/docs/api/csf). In particular, `args` and `decorators` properties are supported. Every component story file consists of a required **default export** and one or more **named exports**.
+5. Write stories. Astrobook scans all `.stories.{ts,tsx,js,jsx,mts,mjs}` files. It's compatible with a limited subset of Storybook's [Component Story Format v3](https://storybook.js.org/docs/api/csf). In particular, `args`, `decorators`, and `parameters` properties are supported. Every component story file consists of a required **default export** and one or more **named exports**.
 
    ```ts
    // src/components/Button.stories.ts
@@ -159,6 +159,23 @@ export const PrimaryButton = {
 ```
 
 This will render the button, wrapped in a red border, which is then wrapped in a green border.
+
+### Parameters
+
+Parameters are free-form data passed to global decorators through the `story.parameters` prop. Set defaults in the default export and override them in individual stories. The merge is shallow: a story's value replaces the default value for the same key.
+
+```ts
+export default {
+  component: Button,
+  parameters: { theme: 'light', layout: 'centered' },
+}
+
+export const Dark = {
+  parameters: { theme: 'dark' },
+}
+```
+
+The `Dark` story's parameters are `{ theme: 'dark', layout: 'centered' }`. Both exports accept `null` or omitted parameters.
 
 ### Slots
 
@@ -305,6 +322,34 @@ export default defineConfig({
     }),
   ],
 })
+```
+
+### `decorators`
+
+Wrap every story with Astro or framework components. Paths can be relative to the project root or package identifiers. Defaults to `[]`.
+
+```ts
+astrobook({
+  decorators: ['./src/decorators/StoryContext.astro'],
+})
+```
+
+The first entry is outermost. Global decorators wrap outside the story's own decorators. Each receives one prop, `story`, with the story's `id`, export `name`, module `id`, `name`, and `directory`, and merged `parameters`.
+
+```astro
+---
+import type { StoryContext } from '@astrobook/types'
+
+interface Props {
+  story: StoryContext
+}
+
+const { story } = Astro.props
+---
+
+<div data-theme={story.parameters.theme} data-story-id={story.id}>
+  <slot />
+</div>
 ```
 
 ### `head`

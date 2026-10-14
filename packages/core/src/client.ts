@@ -19,6 +19,7 @@ export function parseStoryDefaultExport(
   importPath: string,
 ): {
   isAstroComponent: boolean
+  parameters: StoryNamedExport['parameters']
 } {
   const defaultExport = 'default' in module ? module['default'] : undefined
   if (!defaultExport) {
@@ -43,7 +44,18 @@ export function parseStoryDefaultExport(
   // Whether the component is an Astro component or not (e.g. React, Vue, etc.)
   const isAstroComponent: boolean = isAstroComponentFactory(component)
 
-  return { isAstroComponent }
+  const parameters =
+    'parameters' in defaultExport ? defaultExport.parameters : undefined
+  if (parameters != null && typeof parameters !== 'object') {
+    throw new TypeError(
+      `[astrobook] The 'parameters' property of the default export from '${importPath}' should be an object or undefined, but got ${typeof parameters}`,
+    )
+  }
+
+  return {
+    isAstroComponent,
+    parameters: parameters as StoryNamedExport['parameters'],
+  }
 }
 
 /**
@@ -83,6 +95,14 @@ export function parseStoryNamedExport(
     )
   }
 
+  const parameters =
+    'parameters' in storyObject ? storyObject.parameters : undefined
+  if (parameters != null && typeof parameters !== 'object') {
+    throw new TypeError(
+      `[astrobook] The 'parameters' property of the named export '${storyName}' from '${importPath}' should be an object or undefined, but got ${typeof parameters}`,
+    )
+  }
+
   const slots = 'slots' in storyObject ? storyObject.slots : undefined
   if (slots != null && typeof slots !== 'object') {
     throw new TypeError(
@@ -107,6 +127,7 @@ export function parseStoryNamedExport(
   return {
     decorators,
     args,
+    parameters: parameters as StoryNamedExport['parameters'],
     slots: slots as StoryNamedExport['slots'],
   }
 }
