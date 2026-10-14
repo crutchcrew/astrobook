@@ -57,4 +57,15 @@ test.describe('astro slots', () => {
     await expect(page.locator('.panel-body .badge')).toHaveText('Body badge')
     await expect(page.locator('.panel-footer')).toBeEmpty()
   })
+
+  test('slot arrays render in order', async ({ page }) => {
+    await page.goto(url('slot-arrays'))
+
+    const body = page.locator('.panel-body > *')
+    await expect(body).toHaveCount(2)
+    await expect(body.nth(0)).toHaveClass('badge')
+    await expect(body.nth(0)).toHaveText('Icon')
+    await expect(body.nth(1)).toHaveClass('label')
+    await expect(body.nth(1)).toHaveText('Label')
+  })
 })

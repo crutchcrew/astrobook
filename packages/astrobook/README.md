@@ -162,7 +162,7 @@ This will render the button, wrapped in a red border, which is then wrapped in a
 
 ### Slots
 
-A story's `slots` property fills the component's slots, keyed by slot name. Use `default` for the default slot. A slot takes an HTML string, a component, or an object with a component and the props to pass to it.
+A story's `slots` property fills the component's slots, keyed by slot name. Use `default` for the default slot. A slot takes an HTML string, a component, an object with a component and the props to pass to it, or an array of these, rendered in order.
 
 ```astro
 <!-- Card.astro -->
@@ -192,6 +192,12 @@ export const WithBadge = {
   slots: {
     header: { component: Badge, props: { label: 'New' } },
     default: Badge,
+  },
+}
+
+export const WithBadgeAndText = {
+  slots: {
+    default: [{ component: Badge, props: { label: 'New' } }, 'Kitchen notes'],
   },
 }
 ```

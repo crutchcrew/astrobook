@@ -26,3 +26,12 @@ export const ComponentSlots = {
     default: { component: AstroBadge, props: { label: 'Body badge' } },
   },
 }
+
+export const SlotArrays = {
+  slots: {
+    default: [
+      { component: AstroBadge, props: { label: 'Icon' } },
+      '<span class="label">Label</span>',
+    ],
+  },
+}

@@ -90,13 +90,17 @@ export function parseStoryNamedExport(
     )
   }
   for (const [name, slot] of Object.entries(slots ?? {})) {
-    if (
-      slot == null ||
-      !['string', 'object', 'function'].includes(typeof slot)
-    ) {
-      throw new TypeError(
-        `[astrobook] The '${name}' slot of the named export '${storyName}' from '${importPath}' should be an HTML string or a component, but got ${slot === null ? 'null' : typeof slot}`,
-      )
+    const items: unknown[] = Array.isArray(slot) ? slot : [slot]
+    for (const item of items) {
+      if (
+        item == null ||
+        Array.isArray(item) ||
+        !['string', 'object', 'function'].includes(typeof item)
+      ) {
+        throw new TypeError(
+          `[astrobook] The '${name}' slot of the named export '${storyName}' from '${importPath}' should be an HTML string, a component, or an array of them, but got ${describe(item)}`,
+        )
+      }
     }
   }
 
@@ -105,4 +109,10 @@ export function parseStoryNamedExport(
     args,
     slots: slots as StoryNamedExport['slots'],
   }
+}
+
+function describe(value: unknown): string {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'a nested array'
+  return typeof value
 }

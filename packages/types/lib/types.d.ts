@@ -364,11 +364,17 @@ export interface StoryDecorator {
 }
 
 /**
- * The content of a slot: an HTML string, a component, or a component with its
- * props as a {@link StorySlotComponent}.
+ * The content of a slot: one {@link StorySlotItem}, or an array of them
+ * rendered in order.
+ */
+export type StorySlot = StorySlotItem | StorySlotItem[]
+
+/**
+ * An HTML string, a component, or a component with its props as a
+ * {@link StorySlotComponent}.
  */
 // Components of every framework are objects or functions, so `object` covers them.
-export type StorySlot = string | StorySlotComponent | object
+export type StorySlotItem = string | StorySlotComponent | object
 
 /**
  * A component, and the props to pass to it, to render into a slot.
