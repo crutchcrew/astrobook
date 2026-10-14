@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -21,6 +22,8 @@ import {
 
 export function createVirtualFilesPlugin(
   rootDir: string,
+  manifestPath: string,
+  initialStoryModules: string,
   config: GlobalConfig,
   astroConfig: AstroConfig,
   logger: AstroIntegrationLogger,
@@ -40,47 +43,53 @@ export function createVirtualFilesPlugin(
     )
   }
 
-  let storyModules: string | undefined
-  let needToReload = false
-  let watcherInitialized = false
+  let storyModules = initialStoryModules
 
-  async function getStoryModules(): Promise<string> {
+  /**
+   * Astro injects one route per story when it sets up the integration, so a
+   * story added, renamed or removed later needs Astro itself to restart; a Vite
+   * restart only refreshes the sidebar and leaves the new story's route a 404.
+   * Astro restarts when a file passed to `addWatchFile` changes, so rewrite it.
+   */
+  async function rescanStoryModules() {
     const newStoryModules = await loadStoryModules(rootDir)
-    if (storyModules && newStoryModules !== storyModules) {
-      needToReload = true
-    }
+    if (newStoryModules === storyModules) return
     storyModules = newStoryModules
-    return storyModules
+    logger.info(`Stories changed, restarting`)
+    await fs.writeFile(manifestPath, storyModules, 'utf-8')
   }
 
-  async function restartServerIfNeeded(server: ViteDevServer) {
-    await getStoryModules()
-    if (needToReload) {
-      needToReload = false
-      logger.info(`Restarting`)
-      await server.restart()
+  let syncing: Promise<void> | undefined
+  let rescanAgain = false
+
+  /**
+   * Runs one rescan at a time, so an older scan can never finish last and
+   * write a stale list. A change during a scan queues one more. It never
+   * rejects: a half-written story that fails to parse keeps the previous list
+   * until the next save, instead of an unhandled rejection in the watcher.
+   */
+  function syncStoryModules(): Promise<void> {
+    if (syncing) {
+      rescanAgain = true
+      return syncing
     }
+    syncing = (async () => {
+      do {
+        rescanAgain = false
+        try {
+          await rescanStoryModules()
+        } catch (error) {
+          logger.warn(`Unable to scan stories: ${String(error)}`)
+        }
+      } while (rescanAgain)
+    })().finally(() => {
+      syncing = undefined
+    })
+    return syncing
   }
 
-  function initializeNewFileWatcher(server: ViteDevServer) {
-    if (watcherInitialized || !server.watcher) return
-    watcherInitialized = true
-
-    server.watcher.on('add', async (filePath: string) => {
-      if (filePath.includes('.stories.')) {
-        logger.debug(`Potential story file added: ${filePath}`)
-        await restartServerIfNeeded(server)
-      }
-    })
-
-    server.watcher.on('unlink', async (filePath: string) => {
-      if (filePath.includes('.stories.')) {
-        logger.debug(`Potential story file deleted: ${filePath}`)
-        await restartServerIfNeeded(server)
-      }
-    })
-
-    logger.debug(`Initialized file watcher for story files`)
+  function isStoryFile(filePath: string) {
+    return filePath.includes('.stories.')
   }
 
   return {
@@ -102,7 +111,7 @@ export function createVirtualFilesPlugin(
     load(id) {
       switch (id) {
         case STORY_MODULES_RESOLVED_ID:
-          return getStoryModules()
+          return storyModules
         case GLOBAL_CONFIG_RESOLVED_ID:
           return `const config = ${JSON.stringify(config)}; export default config;`
         case COMPONENT_HEAD_RESOLVED_ID:
@@ -113,10 +122,16 @@ export function createVirtualFilesPlugin(
           return config.css.map((id) => `import ${resolveId(id)};`).join('')
       }
     },
+    configureServer(server: ViteDevServer) {
+      const onStoryFileChange = async (filePath: string) => {
+        if (isStoryFile(filePath)) await syncStoryModules()
+      }
+      server.watcher.on('add', onStoryFileChange)
+      server.watcher.on('unlink', onStoryFileChange)
+    },
     async handleHotUpdate(ctx) {
-      const { server } = ctx
-      initializeNewFileWatcher(server)
-      await restartServerIfNeeded(server)
+      // An edited story file can add, rename or remove its named exports.
+      if (isStoryFile(ctx.file)) await syncStoryModules()
     },
   }
 }
