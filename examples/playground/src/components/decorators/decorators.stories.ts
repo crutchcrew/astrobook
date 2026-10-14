@@ -8,6 +8,7 @@ import VueDecorator from './VueDecorator.vue'
 
 export default {
   component: ReactCounter,
+  parameters: { theme: 'light', layout: 'centered', nested: { default: true } },
 }
 
 export const SingleDecorator = {
@@ -15,6 +16,7 @@ export const SingleDecorator = {
 }
 
 export const MultipleDecorators = {
+  parameters: { theme: 'dark', nested: { story: true } },
   args: { step: 5 },
   decorators: [
     { component: ReactDecorator, props: { label: 'Outer Decorator' } },

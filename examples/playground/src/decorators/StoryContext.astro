@@ -1,0 +1,18 @@
+---
+import type { StoryContext } from '@astrobook/types'
+
+interface Props {
+  story: StoryContext
+}
+
+const { story } = Astro.props
+---
+
+<div
+  data-testid="global-decorator"
+  data-story-id={story.id}
+  data-story-name={story.name}
+  data-story-params={JSON.stringify(story.parameters)}
+>
+  <slot />
+</div>
