@@ -1,0 +1,51 @@
+---
+import config from 'virtual:astrobook/global-config.mjs'
+
+import { buildPath } from './build-path'
+
+interface Props {
+  story: string
+  label?: string
+}
+
+const viewports = config.viewports || []
+---
+
+<astrobook-viewport
+  data-preview-url={buildPath(config.storyBase, Astro.props.story)}
+  data-story-label={Astro.props.label ?? Astro.props.story}
+  class=":uno: sticky top-0 left-0 z-10 box-border block w-full shrink-0 border-0 border-b border-solid border-gray-200 bg-gray-50 px-2 py-1 dark:border-gray-700 dark:bg-zinc-900"
+>
+  <div
+    role="group"
+    aria-label="Story viewport"
+    class=":uno: flex flex-wrap gap-1"
+  >
+    <button
+      type="button"
+      data-viewport-name=""
+      aria-pressed="true"
+      class=":uno: astrobook-sidebar-button text-sm aria-pressed:bg-gray-200 aria-pressed:text-gray-800 dark:aria-pressed:bg-gray-700 dark:aria-pressed:text-gray-200"
+      >Full</button
+    >
+    {
+      viewports.map(({ name, width, height }) => (
+        <button
+          type="button"
+          data-viewport-name={name}
+          data-viewport-width={width}
+          data-viewport-height={height}
+          aria-pressed="false"
+          class=":uno: astrobook-sidebar-button text-sm aria-pressed:bg-gray-200 aria-pressed:text-gray-800 dark:aria-pressed:bg-gray-700 dark:aria-pressed:text-gray-200"
+        >
+          {name} {width}
+        </button>
+      ))
+    }
+  </div>
+</astrobook-viewport>
+
+<script>
+  import { initViewportToolbar } from './viewport-toolbar'
+  initViewportToolbar()
+</script>

@@ -128,6 +128,14 @@ export interface IntegrationOptions {
   decorators?: string[]
 
   /**
+   * Dashboard viewport presets in CSS pixels. Names must be non-empty and unique;
+   * widths and optional heights must be positive integers. Use false or [] to hide
+   * the toolbar. The selected name is saved locally between stories.
+   * @default [{ name: 'Mobile', width: 375 }, { name: 'Tablet', width: 768 }, { name: 'Desktop', width: 1440 }]
+   */
+  viewports?: { name: string; width: number; height?: number }[] | false
+
+  /**
    * Controls which Astro component is rendered on the dashboard homepage.
    *
    * - Pass a string (relative path or package identifier) to fully replace
@@ -339,6 +347,11 @@ export interface StoryContext {
 }
 
 export interface GlobalConfig {
+  /**
+   * Resolved dashboard viewport presets, or false to hide the toolbar.
+   */
+  viewports: { name: string; width: number; height?: number }[] | false
+
   /**
    * Components to wrap every story, in order with the first outermost.
    * Each receives a `story` prop containing its StoryContext.
