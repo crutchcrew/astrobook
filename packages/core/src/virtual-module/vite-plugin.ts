@@ -53,12 +53,35 @@ export function createVirtualFilesPlugin(
    * restart only refreshes the sidebar and leaves the new story's route a 404.
    * Astro restarts when a file passed to `addWatchFile` changes, so rewrite it.
    */
-  async function syncStoryModules() {
+  async function rescanStoryModules() {
     const newStoryModules = await loadStoryModules(rootDir)
     if (newStoryModules === storyModules) return
     storyModules = newStoryModules
     logger.info(`Stories changed, restarting`)
     await fs.writeFile(manifestPath, storyModules, 'utf-8')
+  }
+
+  let syncing: Promise<void> | undefined
+  let rescanAgain = false
+
+  /**
+   * Runs one rescan at a time, so an older scan can never finish last and
+   * write a stale list. A change during a scan queues one more.
+   */
+  function syncStoryModules(): Promise<void> {
+    if (syncing) {
+      rescanAgain = true
+      return syncing
+    }
+    syncing = (async () => {
+      do {
+        rescanAgain = false
+        await rescanStoryModules()
+      } while (rescanAgain)
+    })().finally(() => {
+      syncing = undefined
+    })
+    return syncing
   }
 
   function isStoryFile(filePath: string) {
