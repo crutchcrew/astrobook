@@ -369,6 +369,13 @@ export interface GlobalConfig {
   storyBase: string
 
   /**
+   * Identifies the running dev server and changes when Astro restarts it, so
+   * a page can tell the restarted server from the one that rendered it. Only
+   * set in dev.
+   */
+  serverId?: string
+
+  /**
    * The path to an Astro component to provide custom tags in the `<head>`.
    */
   head: string

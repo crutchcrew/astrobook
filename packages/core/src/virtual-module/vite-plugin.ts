@@ -50,6 +50,10 @@ export function createVirtualFilesPlugin(
 
   let storyModules = initialStoryModules
 
+  // Astro sets the integration up again on every restart, so each dev server
+  // gets its own id.
+  let serverId: string | undefined
+
   /**
    * Astro injects one route per story when it sets up the integration, so a
    * story added, renamed or removed later needs Astro itself to restart; a Vite
@@ -60,10 +64,14 @@ export function createVirtualFilesPlugin(
     const newStoryModules = await loadStoryModules(rootDir)
     if (newStoryModules === storyModules) return
     storyModules = newStoryModules
+    restartPending = true
     logger.info(`Stories changed, restarting`)
     await fs.writeFile(manifestPath, storyModules, 'utf-8')
   }
 
+  // Astro sets the integration up again on restart, so this plugin never sees
+  // the flag cleared.
+  let restartPending = false
   let syncing: Promise<void> | undefined
   let rescanAgain = false
 
@@ -91,6 +99,20 @@ export function createVirtualFilesPlugin(
       syncing = undefined
     })
     return syncing
+  }
+
+  let storyUpdate:
+    { file: string; timestamp: number; synced: Promise<void> } | undefined
+
+  /**
+   * Vite calls `hotUpdate` once per environment for the same change, so they
+   * share one rescan.
+   */
+  function syncStoryUpdate(file: string, timestamp: number) {
+    if (storyUpdate?.file !== file || storyUpdate.timestamp !== timestamp) {
+      storyUpdate = { file, timestamp, synced: syncStoryModules() }
+    }
+    return storyUpdate.synced
   }
 
   function isStoryFile(filePath: string) {
@@ -140,7 +162,7 @@ export function createVirtualFilesPlugin(
         case STORY_MODULES_RESOLVED_ID:
           return storyModules
         case GLOBAL_CONFIG_RESOLVED_ID:
-          return `const config = ${JSON.stringify(config)}; export default config;`
+          return `const config = ${JSON.stringify({ ...config, serverId } satisfies GlobalConfig)}; export default config;`
         case COMPONENT_HEAD_RESOLVED_ID:
           return `export { default } from ${resolveId(config.head)};`
         case COMPONENT_HOME_RESOLVED_ID:
@@ -150,15 +172,30 @@ export function createVirtualFilesPlugin(
       }
     },
     configureServer(server: ViteDevServer) {
+      serverId = crypto.randomUUID()
       const onStoryFileChange = async (filePath: string) => {
         if (isStoryFile(filePath)) await syncStoryModules()
       }
       server.watcher.on('add', onStoryFileChange)
       server.watcher.on('unlink', onStoryFileChange)
     },
-    async handleHotUpdate(ctx) {
-      // An edited story file can add, rename or remove its named exports.
-      if (isStoryFile(ctx.file)) await syncStoryModules()
+    hotUpdate: {
+      order: 'pre',
+      /**
+       * An edited story file can add, rename or remove its named exports. When
+       * it does, the update is dropped: Astro would reload the page right away,
+       * the old server would render it during the restart, and the page would
+       * keep the old stories. Without the reload the page stays on the old
+       * server's socket, which the restart closes, and the page reloads once
+       * the new server answers (see `dev-reload.ts` in `@astrobook/ui`). The
+       * flag also covers a story added or removed, whose rescan the watcher
+       * may have finished before this hook runs.
+       */
+      async handler({ file, timestamp }) {
+        if (!isStoryFile(file)) return
+        await syncStoryUpdate(file, timestamp)
+        if (restartPending) return []
+      },
     },
   }
 }

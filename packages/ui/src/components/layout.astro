@@ -44,6 +44,11 @@ const DEFAULT_SIDEBAR_RESIZING = false
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    {
+      config.serverId && (
+        <meta name="astrobook-server" content={config.serverId} />
+      )
+    }
     <title>
       {
         Astro.props.label !== undefined
@@ -59,6 +64,10 @@ const DEFAULT_SIDEBAR_RESIZING = false
     <script>
       import { initStoryLoaded } from './story-loaded'
       initStoryLoaded()
+    </script>
+    <script>
+      import { initDevReload } from './dev-reload'
+      initDevReload()
     </script>
     <CustomHead />
     <ClientRouter fallback="none" />
